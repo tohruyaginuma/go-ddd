@@ -51,23 +51,23 @@ func NewUserName (s string) (UserName, error){
 }
 
 type User struct {
-	id	UserId
-	name UserName
+	Id	UserId
+	Name UserName
 }
 
 func NewUser(name UserName) (User, error){
     return User{
-        id: NewUserId(),
-        name: name,
+        Id: NewUserId(),
+        Name: name,
     }, nil
 }
 
-func (u User) ID() UserId {
-    return u.id
+func (u User) getId() UserId {
+    return u.Id
 }
 
-func (u User) Name() UserName {
-    return u.name
+func (u User) getName() UserName {
+    return u.Name
 }
 
 type UserService struct {}
@@ -81,10 +81,10 @@ func (us UserService) Exists(user User) bool {
     
 	defer conn.Close(context.Background())
     
-    cmd := "SELECT 1 FROM Users WHERE id = $1"
+    cmd := "SELECT 1 FROM Users WHERE name = $1"
 
     var exists int
-    err = conn.QueryRow(context.Background(), cmd, user.ID()).Scan(&exists)
+    err = conn.QueryRow(context.Background(), cmd, user.getName()).Scan(&exists)
     if err == pgx.ErrNoRows {
         return false
     }
@@ -127,14 +127,14 @@ func CreateUser(userName string)  {
     
     cmd := "INSERT INTO Users (id, name) VALUES ($1, $2)"
     
-    _, err = conn.Exec(context.Background(), cmd, user.ID(), user.Name())
+    _, err = conn.Exec(context.Background(), cmd, user.getId(), user.getName())
 
     if err != nil {
         log.Printf("Exists check failed: %v", err)
     }
     
 
-    fmt.Printf("Created successfully new User named %s %s\n", user.name, user.id)
+    fmt.Printf("Created successfully new User named %s %s\n", user.getId(), user.getName())
 }
 
 func Execute() {
