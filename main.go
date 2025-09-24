@@ -1,11 +1,18 @@
 package main
 
 import (
-	chapter4 "ddd/chapter4"
+	"log"
+
+	"github.com/joho/godotenv"
 )
 
+func init() {
+    err := godotenv.Load()
+    if err != nil {
+      log.Fatal("Error loading .env file")
+    }
+}
 
 func main () {
-	// chapter1.Execute()
-	chapter4.Execute()
+	// CreateUser("toru")
 }
