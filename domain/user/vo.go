@@ -24,11 +24,20 @@ func (name UserName) String() string {
 	return string(name)
 }
 
-func NewUserID () UserID{
+func NewUserID() UserID{
     return UserID(uuid.New())
 }
 
-func NewUserName (s string) (UserName, error){
+func ParseUserID(s string) (UserID, error) {
+    u, err := uuid.Parse(s)
+    if err != nil {
+        return UserID{}, err
+    }
+
+    return UserID(u), nil
+}
+
+func NewUserName(s string) (UserName, error){
     s = strings.TrimSpace(s)
 
     if s == "" {

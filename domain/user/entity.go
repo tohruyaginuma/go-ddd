@@ -12,6 +12,13 @@ func NewUser(name UserName) (*User, error){
     }, nil
 }
 
+func NewUserWithID(id UserID, name UserName) (*User, error){
+    return &User{
+        id: id,
+        name: name,
+    }, nil
+}
+
 func (u *User) ID() UserID {
     return u.id
 }
