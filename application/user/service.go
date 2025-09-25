@@ -1,4 +1,4 @@
-package usersvc
+package user
 
 import (
 	"context"
@@ -28,22 +28,22 @@ func (s *Service) CreateUser(ctx context.Context, userName string) (*domain.User
 	isExist, err := s.userSvc.Exists(ctx, un)
 
 	if err != nil {
-		return nil, fmt.Errorf("error occared") 
+		return nil, fmt.Errorf("check exists: %w", err)
 	}
 
 	if isExist {
 		return nil, fmt.Errorf("%s already exists", userName) 
 	}
 
-	name, err := domain.NewUserName(userName)
+    user, err := domain.NewUser(un)
 
 	if err != nil {
 		return nil, err
 	}
-    user, err := domain.NewUser(name)
 
-	if err != nil {
-		return nil, err
+	if _, err := s.repo.Save(ctx, user); err != nil {
+		return nil, fmt.Errorf("save user: %w", err)
 	}
+
 	return user, nil
 }

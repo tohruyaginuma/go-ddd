@@ -30,13 +30,13 @@ func main () {
 	defer pool.Close()
 
   repo := userrepo.New(pool)
-  domSrv := domain.New()
+  domSrv := domain.New(repo)
   appSrv := application.New(repo, domSrv)
 
-  usr, err := appSrv.CreateUser("Toru")
+  usr, err := appSrv.CreateUser(ctx, "Toru")
 
   if err != nil {
-	log.Fatalln("user create failed")
+	log.Fatalln("user create failed", err)
   } 
 
   fmt.Println(usr.Name())
