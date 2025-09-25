@@ -1,6 +1,7 @@
 package usersvc
 
 import (
+	"context"
 	"fmt"
 	domain "go-ddd/domain/user"
 )
@@ -17,16 +18,23 @@ func New(repo domain.Repository, userSvc domain.Service) Service {
 	} 
 }
 
-func (s *Service) CreateUser(userName string) (*domain.User, error) {
+func (s *Service) CreateUser(ctx context.Context, userName string) (*domain.User, error) {
     un, err := domain.NewUserName(userName)
 
     if err != nil {
         return nil, err
     }
 
-    if s.userSvc.Exists(un) {
-		return nil, fmt.Errorf("%s already exists", userName)
-    }
+	isExist, err := s.userSvc.Exists(ctx, un)
+
+	if err != nil {
+		return nil, fmt.Errorf("error occared") 
+	}
+
+	if isExist {
+		return nil, fmt.Errorf("%s already exists", userName) 
+	}
+
 	name, err := domain.NewUserName(userName)
 
 	if err != nil {

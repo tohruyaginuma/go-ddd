@@ -1,12 +1,23 @@
 package user
 
-type Service struct {}
+import "context"
 
-func New() Service {
-    return Service{}
+type Service struct {
+    repo Repository
 }
 
-func (us Service) Exists(un UserName) bool {
-    // TODO: Implement
-    return false
+func New(repo Repository) Service {
+    return Service{
+        repo: repo,
+    }
+}
+
+func (us Service) Exists(ctx context.Context, un UserName) (bool, error) {
+    user, err := us.repo.Find(ctx, un);
+
+    if err != nil {
+        return false, err
+    }
+
+    return user != nil, nil
 }
