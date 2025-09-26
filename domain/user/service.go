@@ -1,6 +1,9 @@
 package user
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type Service struct {
 	repo Repository
@@ -12,8 +15,8 @@ func New(repo Repository) *Service {
 	}
 }
 
-func (s *Service) Exists(name UserName) (bool, error) {
-	duplicatedUser, err := s.repo.FindByName(name)
+func (s *Service) Exists(ctx context.Context, name UserName) (bool, error) {
+	duplicatedUser, err := s.repo.FindByName(ctx, name)
 
 	if err != nil {
 		return false, fmt.Errorf("failed to check if user exists: %w", err)
