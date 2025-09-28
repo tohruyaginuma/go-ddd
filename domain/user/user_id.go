@@ -4,7 +4,6 @@ import "errors"
 
 type UserID string
 
-var ErrUserIDEmpty = errors.New("user id is empty")
 
 func NewUserID(value string) (UserID, error) {
 	if value == "" {
