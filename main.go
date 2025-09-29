@@ -7,31 +7,52 @@ import (
 	appsvc "go-ddd/application/user"
 	domain "go-ddd/domain/user"
 	infra "go-ddd/infra/inmemory/user"
+	"io"
+	"log"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 )
 
+func startup() *appsvc.Service {
+	repo := infra.NewRepository()
+    domSvc := domain.New(repo)
+    return appsvc.New(repo, domSvc)
+}
+
 func main() {
-    repo := infra.NewRepository()
-    dom := domain.New(repo)
-    app := appsvc.New(repo, dom)
+	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer stop()
 
-	ctx := context.Background()
+	app := startup()
+
 	reader := bufio.NewReader(os.Stdin)
-
 	for {
 		fmt.Println("Input your name :")
-		fmt.Print(">")
+		fmt.Print("> ")
 
-		input, _ := reader.ReadString('\n')
+		input, err := reader.ReadString('\n')
+
+		if err != nil {
+			if err == io.EOF {
+				fmt.Println("\nbye。")
+
+				return 
+			}
+
+			log.Printf("read error: %v", err)
+			continue
+		}
+
 		input = strings.TrimSpace(input)
-		fmt.Println(input)
+		
 		if input == "" {
 			continue
 		}
 
 		if err := app.Register(ctx, appsvc.UserRegisterCommand{Name: input}); err != nil {
-			fmt.Printf("failed to register user: %v\n", err)
+			log.Printf("failed to register user: %v", err)
 		} else {
 			fmt.Println("-------------------------")
 			fmt.Println("user created:")
@@ -42,9 +63,18 @@ func main() {
 		}
 
 		fmt.Println("Continue? (y/n)")
-		fmt.Print(">")
+		fmt.Print("> ")
 
-		ans, _ := reader.ReadString('\n')
+		ans, err := reader.ReadString('\n')
+
+		if err != nil {           
+			if err == io.EOF {    
+				fmt.Println("\nbye.")
+				return
+			}
+			log.Printf("read error: %v", err) 
+			continue
+		}
 		if strings.ToLower(strings.TrimSpace(ans)) == "n" {
 			break
 		}
