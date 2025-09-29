@@ -1,7 +1,5 @@
 package user
 
-import "errors"
-
 type UserID string
 
 

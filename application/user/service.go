@@ -49,33 +49,78 @@ func (s *Service) GetAll(ctx context.Context) ([]UserDTO, error) {
 }
 
 func (s *Service) Update(ctx context.Context, cmd UserUpdateCommand) (UserDTO, error) {
-	// id, err := domain.NewUserID(cmd.ID)
+	id, err := domain.NewUserID(cmd.ID)
+	if err != nil {
+		return UserDTO{}, fmt.Errorf("invalid user ID: %w", err)
+	}
 
-	
+	user, err := s.r.FindByID(ctx, id)
+	if err != nil {
+		return UserDTO{}, fmt.Errorf("failed to find user: %w", err)
+	}
+	if user == nil {
+		return UserDTO{}, domain.ErrUserNotFound
+	}
 
-	// if err != nil {
-	// 	return UserDTO{}, fmt.Errorf("invalid user ID: %w", err)
-	// }
+	if cmd.Name != "" {
+		name, err := domain.NewUserName(cmd.Name)
+		if err != nil {
+			return UserDTO{}, fmt.Errorf("invalid user name: %w", err)
+		}
+		user.ChangeName(name)
 
-	// user := r
+		exists, err := s.us.Exists(ctx, *user)
+		if err != nil {
+			return UserDTO{}, fmt.Errorf("failed to check user existence: %w", err)
+		}
+		if exists {
+			return UserDTO{}, fmt.Errorf("user already exists")
+		}
+	}
 
-	// name, err := domain.NewUserName(cmd.Name)
+	if err := s.r.Save(ctx, user); err != nil {
+		return UserDTO{}, fmt.Errorf("failed to save user: %w", err)
+	}
 
-	// if err != nil {
-	// 	return UserDTO{}, fmt.Errorf("invalid user name: %w", err)
-	// }
-
-	// user := domain.NewUserWithID(id, name)
-
-	// user.ChangeName(name)
-
-	// return FromDomain(), nil
+	return FromDomain(*user), nil
 }
 
-func (s *Service) Register(ctx context.Context, cmd UserRegisterCommand)  (error){
+func (s *Service) Register(ctx context.Context, cmd UserRegisterCommand) error {
+	name, err := domain.NewUserName(cmd.Name)
+	if err != nil {
+		return fmt.Errorf("invalid user name: %w", err)
+	}
 
+	user, err := domain.NewUser(name)
+	if err != nil {
+		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	if err := s.r.Save(ctx, user); err != nil {
+		return fmt.Errorf("failed to save user: %w", err)
+	}
+
+	return nil
 }
 
-func (s *Service) Delete(ctx context.Context, cmd UserDeleteCommand) (error) {
-	
+func (s *Service) Delete(ctx context.Context, cmd UserDeleteCommand) error {
+	id, err := domain.NewUserID(cmd.ID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	user, err := s.r.FindByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to find user: %w", err)
+	}
+	if user == nil {
+		// If user not found, do nothing (as in the C# sample)
+		return nil
+	}
+
+	if err := s.r.Delete(ctx, user); err != nil {
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+
+	return nil
 }
