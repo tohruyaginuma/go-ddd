@@ -1,18 +1,19 @@
 package main
 
 import (
-	"bufio"
 	"context"
-	"fmt"
 	appsvc "go-ddd/application/user"
 	domain "go-ddd/domain/user"
 	infra "go-ddd/infra/inmemory/user"
-	"io"
+	router "go-ddd/interfaces/http"
+	ifhttp "go-ddd/interfaces/http/controller"
 	"log"
-	"os"
+	"net/http"
 	"os/signal"
-	"strings"
 	"syscall"
+	"time"
+
+	"github.com/labstack/echo/v4"
 )
 
 func startup() *appsvc.Service {
@@ -26,57 +27,28 @@ func main() {
 	defer stop()
 
 	app := startup()
+	uc := ifhttp.NewUserController(app)
 
-	reader := bufio.NewReader(os.Stdin)
-	for {
-		fmt.Println("Input your name :")
-		fmt.Print("> ")
+	e := echo.New()
+	router.RegisterRoute(e, uc)
 
-		input, err := reader.ReadString('\n')
-
-		if err != nil {
-			if err == io.EOF {
-				fmt.Println("\nbye。")
-
-				return 
-			}
-
-			log.Printf("read error: %v", err)
-			continue
+	go func () {
+		if err := e.Start(":8080"); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server start error : %v", err)
 		}
+	} ()
 
-		input = strings.TrimSpace(input)
-		
-		if input == "" {
-			continue
-		}
+	<-ctx.Done()
 
-		if err := app.Register(ctx, appsvc.UserRegisterCommand{Name: input}); err != nil {
-			log.Printf("failed to register user: %v", err)
-		} else {
-			fmt.Println("-------------------------")
-			fmt.Println("user created:")
-			fmt.Println("-------------------------")
-			fmt.Println("user name:")
-			fmt.Println("- " + input)
-			fmt.Println("-------------------------")
-		}
+	log.Println("shutting down...")
 
-		fmt.Println("Continue? (y/n)")
-		fmt.Print("> ")
+	shutownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 
-		ans, err := reader.ReadString('\n')
+	defer cancel()
 
-		if err != nil {           
-			if err == io.EOF {    
-				fmt.Println("\nbye.")
-				return
-			}
-			log.Printf("read error: %v", err) 
-			continue
-		}
-		if strings.ToLower(strings.TrimSpace(ans)) == "n" {
-			break
-		}
+	if err := e.Shutdown(shutownCtx); err != nil {
+		log.Fatalf("server shutdown error: ", err)
 	}
+
+	log.Println("server stopped gracefully")
 }
