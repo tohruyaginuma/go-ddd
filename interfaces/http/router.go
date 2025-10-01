@@ -11,7 +11,7 @@ func RegisterRoute(e *echo.Echo, uc *controllers.UserController){
 	v1Users := v1.Group("/users")
 
 	v1Users.GET("", uc.Index)
-	// v1Users.GET("/:id", uc.Get)
+	v1Users.GET("/:id", uc.Get)
 	// v1Users.POST("", uc.Post)
 	// v1Users.PUT("/:id", uc.Put)
 	// v1Users.DELETE("/:id", uc.Delete)
