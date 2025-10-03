@@ -1,24 +1,23 @@
-package userController
+package http
 
 import (
 	appsvc "go-ddd/application/user"
-	interfaceHttp "go-ddd/interfaces/http"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
-type UserController struct {
+type UserHandler struct {
 	app *appsvc.Service
 }
 
-func NewUserController(app *appsvc.Service) *UserController {
-	return &UserController{
+func NewUserHandler(app *appsvc.Service) *UserHandler {
+	return &UserHandler{
 		app: app,
 	}
 }
 
-func (uc *UserController) Index(c echo.Context) error {
+func (uc *UserHandler) Index(c echo.Context) error {
 	ctx := c.Request().Context()
 	list, err := uc.app.GetAll(ctx)
 	
@@ -26,15 +25,15 @@ func (uc *UserController) Index(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "failed to get users"})
 	}
 	
-	res := make([]interfaceHttp.UserResponse, 0, len(list))
+	res := make([]UserResponse, 0, len(list))
 	for _, u := range list {
-		res = append(res, interfaceHttp.UserResponse{ID: u.ID, Name: u.Name})
+		res = append(res, UserResponse{ID: u.ID, Name: u.Name})
 	}
 
-	return c.JSON(http.StatusOK, interfaceHttp.UserIndexResponse{Users: res})
+	return c.JSON(http.StatusOK, UserIndexResponse{Users: res})
 }
 
-func (uc *UserController) Get(c echo.Context) error {
+func (uc *UserHandler) Get(c echo.Context) error {
 	ctx := c.Request().Context()
 	id := c.Param("id")
 
@@ -44,16 +43,16 @@ func (uc *UserController) Get(c echo.Context) error {
 		return c.JSON(http.StatusNotFound, map[string]string{"error": "failed to get user"})
 	}
 
-	return c.JSON(http.StatusOK, interfaceHttp.UserGetResponse{
-		User: interfaceHttp.UserResponse{ID: res.ID, Name:res.Name},
+	return c.JSON(http.StatusOK, UserGetResponse{
+		User: UserResponse{ID: res.ID, Name:res.Name},
 	})
 
 }
 
-func (uc *UserController) Post(c echo.Context) error {
+func (uc *UserHandler) Post(c echo.Context) error {
 	ctx := c.Request().Context()
 	
-	var req interfaceHttp.UserPostRequest
+	var req UserPostRequest
 
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
@@ -70,11 +69,11 @@ func (uc *UserController) Post(c echo.Context) error {
 	return c.NoContent(http.StatusCreated)
 }
 
-func (uc *UserController) Put(c echo.Context) error {
+func (uc *UserHandler) Put(c echo.Context) error {
 	ctx := c.Request().Context()
 	id := c.Param("id")
 
-	var req interfaceHttp.UserPutRequest
+	var req UserPutRequest
 	if err := c.Bind(&req); err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": "invalid request"})
 	}
@@ -86,7 +85,7 @@ func (uc *UserController) Put(c echo.Context) error {
 		ID:   id,
 		Name: req.Name,
 	})
-	
+		
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, map[string]string{"error": err.Error()})
 	}
@@ -94,7 +93,7 @@ func (uc *UserController) Put(c echo.Context) error {
 	return c.NoContent(http.StatusNoContent)
 }
 
-func (uc *UserController) Delete(c echo.Context) error {
+func (uc *UserHandler) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
 	id := c.Param("id")
 

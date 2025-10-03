@@ -11,7 +11,7 @@ type Repository struct {
 	store map[domain.UserID] domain.User
 }
 
-func NewRepository() domain.Repository{
+func NewRepository() *Repository {
 	return &Repository{
 		store: make(map[domain.UserID]domain.User),
 	}

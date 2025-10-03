@@ -6,7 +6,6 @@ import (
 	domain "go-ddd/domain/user"
 	infra "go-ddd/infra/inmemory/user"
 	router "go-ddd/interfaces/http"
-	ifhttp "go-ddd/interfaces/http/controller"
 	"log"
 	"net/http"
 	"os/signal"
@@ -27,7 +26,7 @@ func main() {
 	defer stop()
 
 	app := startup()
-	uc := ifhttp.NewUserController(app)
+	uc := router.NewUserHandler(app)
 
 	e := echo.New()
 	router.RegisterRoute(e, uc)
@@ -47,7 +46,7 @@ func main() {
 	defer cancel()
 
 	if err := e.Shutdown(shutownCtx); err != nil {
-		log.Fatalf("server shutdown error: ", err)
+		log.Fatalf("server shutdown error: %v", err)
 	}
 
 	log.Println("server stopped gracefully")

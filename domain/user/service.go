@@ -1,6 +1,10 @@
 package user
 
-import "context"
+import (
+	"context"
+	"errors"
+	"fmt"
+)
 
 type Service struct {
 	ur Repository
@@ -13,11 +17,15 @@ func New(ur Repository) Service {
 }
 
 func (s *Service) Exists(ctx context.Context, user User) (bool, error) {
-	duplicatedUser, err := s.ur.FindByName(ctx, user.Name())
+	_, err := s.ur.FindByName(ctx, user.Name())
 
 	if err != nil {
-		return false, err
+		if errors.Is(err, ErrUserNotFound) {
+			return false, nil
+		}
+
+		return false, fmt.Errorf("failed to find user by name: %w", err)
 	}
 
-	return duplicatedUser != nil, nil
+	return true, nil
 }

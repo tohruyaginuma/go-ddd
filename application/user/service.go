@@ -18,27 +18,27 @@ func New(r domain.Repository, us domain.Service) *Service {
 	}
 }
 
-func (s *Service) Get(ctx context.Context, cmd UserGetCommand) (UserDTO, error){
+func (s *Service) Get(ctx context.Context, cmd UserGetCommand) (UserDto, error){
 	id, err := domain.NewUserID(cmd.ID)
 
 	if err != nil {
-		return UserDTO{}, fmt.Errorf("invalid user ID: %w", err)
+		return UserDto{}, fmt.Errorf("invalid user ID: %w", err)
 	}
 
 	user, err := s.r.FindByID(ctx, id)
 
 	if err != nil {
-		return UserDTO{}, fmt.Errorf("failed to get all users: %w", err)
+		return UserDto{}, fmt.Errorf("failed to get all users: %w", err)
 	}
 
 	if user == nil {
-		return UserDTO{}, fmt.Errorf("user not found")
+		return UserDto{}, fmt.Errorf("user not found")
 	}
 
 	return FromDomain(*user), nil
 }
 
-func (s *Service) GetAll(ctx context.Context) ([]UserDTO, error) {
+func (s *Service) GetAll(ctx context.Context) ([]UserDto, error) {
 	users, err := s.r.FindAll(ctx)
 
 	if err != nil {
@@ -48,38 +48,38 @@ func (s *Service) GetAll(ctx context.Context) ([]UserDTO, error) {
 	return FromDomainSlice(users), nil
 }
 
-func (s *Service) Update(ctx context.Context, cmd UserUpdateCommand) (UserDTO, error) {
+func (s *Service) Update(ctx context.Context, cmd UserUpdateCommand) (UserDto, error) {
 	id, err := domain.NewUserID(cmd.ID)
 	if err != nil {
-		return UserDTO{}, fmt.Errorf("invalid user ID: %w", err)
+		return UserDto{}, fmt.Errorf("invalid user ID: %w", err)
 	}
 
 	user, err := s.r.FindByID(ctx, id)
 	if err != nil {
-		return UserDTO{}, fmt.Errorf("failed to find user: %w", err)
+		return UserDto{}, fmt.Errorf("failed to find user: %w", err)
 	}
 	if user == nil {
-		return UserDTO{}, domain.ErrUserNotFound
+		return UserDto{}, domain.ErrUserNotFound
 	}
 
 	if cmd.Name != "" {
 		name, err := domain.NewUserName(cmd.Name)
 		if err != nil {
-			return UserDTO{}, fmt.Errorf("invalid user name: %w", err)
+			return UserDto{}, fmt.Errorf("invalid user name: %w", err)
 		}
 		user.ChangeName(name)
 
 		exists, err := s.us.Exists(ctx, *user)
 		if err != nil {
-			return UserDTO{}, fmt.Errorf("failed to check user existence: %w", err)
+			return UserDto{}, fmt.Errorf("failed to check user existence: %w", err)
 		}
 		if exists {
-			return UserDTO{}, fmt.Errorf("user already exists")
+			return UserDto{}, fmt.Errorf("user already exists")
 		}
 	}
 
 	if err := s.r.Save(ctx, user); err != nil {
-		return UserDTO{}, fmt.Errorf("failed to save user: %w", err)
+		return UserDto{}, fmt.Errorf("failed to save user: %w", err)
 	}
 
 	return FromDomain(*user), nil
@@ -94,6 +94,16 @@ func (s *Service) Register(ctx context.Context, cmd UserRegisterCommand) error {
 	user, err := domain.NewUser(name)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
+	}
+
+	exists, err := s.us.Exists(ctx, *user)
+	
+	if err != nil {
+		return fmt.Errorf("failed to save user: %w", err)
+	}
+
+	if exists {
+		return domain.ErrNameEmpty
 	}
 
 	if err := s.r.Save(ctx, user); err != nil {

@@ -8,7 +8,7 @@ import (
 
 	application "go-ddd/application/user"
 	domain "go-ddd/domain/user"
-	userrepo "go-ddd/infra/user"
+	userrepo "go-ddd/infra/inmemory/user"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"

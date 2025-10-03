@@ -8,4 +8,5 @@ var (
 	ErrNameTooShort = errors.New("user name must be at least 3 characters")
 	ErrNameTooLong = errors.New("user name must be at most 20 characters")
 	ErrUserNotFound = errors.New("user not found")
+	ErrUserAlreadyExists = errors.New("user already exists")
 )
