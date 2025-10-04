@@ -4,7 +4,7 @@ import (
 	"context"
 	appsvc "go-ddd/application/user"
 	domain "go-ddd/domain/user"
-	infra "go-ddd/infra/inmemory/user"
+	inmemory "go-ddd/infra/inmemory/user"
 	router "go-ddd/interfaces/http"
 	"log"
 	"net/http"
@@ -16,9 +16,10 @@ import (
 )
 
 func startup() *appsvc.Service {
-	repo := infra.NewRepository()
+	repo := inmemory.NewRepository()
     domSvc := domain.New(repo)
-    return appsvc.New(repo, domSvc)
+	factory := inmemory.NewUserFactory()
+    return appsvc.New(repo, domSvc, factory)
 }
 
 func main() {

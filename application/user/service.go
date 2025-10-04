@@ -9,12 +9,14 @@ import (
 type Service struct {
 	r domain.Repository
 	us domain.Service
+	factory domain.Factory
 }
 
-func New(r domain.Repository, us domain.Service) *Service {
+func New(r domain.Repository, us domain.Service, factory domain.Factory) *Service {
 	return &Service{
 		r: r,
 		us: us,
+		factory: factory,
 	}
 }
 
@@ -91,7 +93,9 @@ func (s *Service) Register(ctx context.Context, cmd UserRegisterCommand) error {
 		return fmt.Errorf("invalid user name: %w", err)
 	}
 
-	user, err := domain.NewUser(name)
+	// Using factory
+	user, err := s.factory.Create(ctx, name)
+	// user, err := domain.NewUser(name)
 	if err != nil {
 		return fmt.Errorf("failed to create user: %w", err)
 	}
