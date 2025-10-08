@@ -17,7 +17,7 @@ func New(repo Repository) *Service {
 }
 
 func (s *Service) Exists(ctx context.Context, circle Circle) (bool, error) {
-	name := circle.Name()
+	name := circle.getNameForComparison()
 	_, err := s.repo.FindByName(ctx, name)
 
 	if err == nil {
